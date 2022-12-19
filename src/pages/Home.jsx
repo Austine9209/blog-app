@@ -13,7 +13,7 @@ import {
 import React, { useState, useEffect } from "react";
 import BlogSection from "../components/blogSection/BlogSection";
 import Spinner from "../components/Spinner";
-import { db } from "../firebase";
+import { db } from "../firebase/firebase";
 import { toast } from "react-toastify";
 import Tags from "../components/Tags";
 import FeatureBlogs from "../components/FeatureBlogs";
