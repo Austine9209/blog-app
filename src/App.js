@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import'react-toastify/dist/ReactToastify.min.css';
-import './App.css';
-import Home from './pages/Home';
-import About from './pages/About';
-import Compose from './pages/Compose';
-import SingleBlogPost from './pages/SingleBlogPost';
-import ContactUs from './pages/ContactUs';
-import Auth from './pages/Auth';
-import NotFound from './pages/NotFound';
-import Navigation from './components/navigation/Navigation';
-import { auth } from './firebase/firebase';
-import { signOut } from 'firebase/auth';
+import { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.min.css";
+import "./App.css";
+import Home from "./pages/Home";
+import About from "./pages/About";
+import Compose from "./pages/Compose";
+import SingleBlogPost from "./pages/SingleBlogPost";
+import ContactUs from "./pages/ContactUs";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import Navigation from "./components/navigation/Navigation";
+import { auth } from "./firebase/firebase";
+import { signOut } from "firebase/auth";
 
 function App() {
   const [active, setActive] = useState("home");
@@ -20,11 +20,11 @@ function App() {
 
   const navigate = useNavigate();
 
-  useEffect (() => {
+  useEffect(() => {
     auth.onAuthStateChanged((authUser) => {
       if (authUser) {
         setUser(authUser);
-      }else {
+      } else {
         setUser(null);
       }
     });
@@ -40,17 +40,34 @@ function App() {
 
   return (
     <div className="App">
-      <Navigation setActive={setActive} active={active} user={user} handleLogout={handelLogout} />
-      <ToastContainer position='top-center'/>
+      <Navigation
+        setActive={setActive}
+        active={active}
+        user={user}
+        handleLogout={handelLogout}
+      />
+      <ToastContainer position="top-center" />
       <Routes>
-      <Route path="/" element={<Home />} />
-        <Route path="/compose" element={<Compose />} />
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/compose"
+          element={user?.uid ? <Compose user={user} /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/update/:id"
+          element={
+            user?.uid ? 
+              <Compose user={user} setActive={setActive} />
+            : 
+              <Navigate to="/" />
+          }
+        />
         <Route path="/about" element={<About />} />
-        <Route path="/update" element={<SingleBlogPost />} />
+        <Route path="/detail/:id" element={<SingleBlogPost />} />
         <Route path="/contactUs" element={<ContactUs />} />
-        <Route path="/auth" element={<Auth setActive={setActive}/>}/>
+        <Route path="/auth" element={<Auth setActive={setActive} />} />
         <Route path="*" element={<NotFound />} />
-      </Routes>    
+      </Routes>
     </div>
   );
 }

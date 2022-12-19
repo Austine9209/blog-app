@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ReactTagInput from "@pathofdev/react-tag-input";
 import "@pathofdev/react-tag-input/build/index.css";
 import { db, storage } from "../firebase/firebase";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import {
   addDoc,
@@ -20,18 +20,26 @@ const initialState = {
   trending: "no",
   category: "",
   description: "",
-  comments: "",
+  comments: [],
   likes: [],
 };
 
-const categoryOption = ["Isekai", "Action", "Drama", "Sports", "Mecha"];
+const categoryOption = [
+  "Isekai",
+  "Action",
+  "Drama",
+  "Sports",
+  "Mecha"
+];
 
-const Compose = () => {
+const Compose = ({ user, setActive }) => {
   const [form, setForm] = useState(initialState);
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(null);
 
   const { id } = useParams();
+
+  const navigate = useNavigate();
 
   const { title, tags, category, trending, description } = form;
 
@@ -72,6 +80,20 @@ const Compose = () => {
     file && uploadFile();
   }, [file]);
 
+  useEffect(() => {
+    id && getBlogDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  const getBlogDetail = async () => {
+    const docRef = doc(db, "blogs", id);
+    const snapshot = await getDoc(docRef);
+    if (snapshot.exists()) {
+      setForm({ ...snapshot.data() });
+    }
+    setActive(null);
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -88,11 +110,46 @@ const Compose = () => {
     setForm({ ...form, category: e.target.value });
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (category && tags && title && description && trending) {
+      if (!id) {
+        try {
+          await addDoc(collection(db, "blogs"), {
+            ...form,
+            timeStamp: serverTimestamp(),
+            author: user.displayName,
+            userId: user.uid,
+          });
+          toast.success("Blog created successfully");
+        } catch (err) {
+          console.log(err);
+        }
+      } else {
+        try {
+          await updateDoc(doc(db, "blogs"), {
+            ...form,
+            timeStamp: serverTimestamp(),
+            author: user.displayName,
+            userId: user.uid,
+          });
+          toast.success("Blog updated successfully");
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    } else {
+      return toast.error("All fields are required");
+    }
+
+    navigate("/");
+  };
+
   return (
     <div>
-      <div>Create Blog</div>
+      <div>{id ? "Update Blog" : "Create Blog"}</div>
       <div>
-        <form>
+        <form className="blog-form" onSubmit={handleSubmit}>
           <div>
             <input
               type="text"
